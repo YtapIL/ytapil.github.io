@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>YTAP Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; direction: rtl; max-width: 600px; margin: 40px auto; }
+    input, button, textarea { width: 100%; padding: 10px; margin-top: 10px; font-size: 16px; }
+    label { font-weight: bold; margin-top: 20px; display: block; }
+    textarea { height: 250px; direction: ltr; }
+    .status { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>ניהול הפניות - YTAP</h2>
+
+  <label for="key">מזהה (id)</label>
+  <input type="text" id="key" placeholder="למשל: gabi" />
+
+  <label for="url">קישור יעד</label>
+  <input type="text" id="url" placeholder="למשל: https://wa.me/9725..." />
+
+  <button onclick="addRedirect()">➕ הוסף</button>
+  <button onclick="saveToGitHub()">💾 שמור ל-GitHub</button>
+
+  <label for="json">קובץ JSON נוכחי</label>
+  <textarea id="json"></textarea>
+
+  <div class="status" id="status"></div>
+
+  <script>
+    let redirects = {};
+
+    function addRedirect() {
+      const key = document.getElementById('key').value.trim();
+      const url = document.getElementById('url').value.trim();
+      if (!key || !url) {
+        alert('נא למלא גם מזהה וגם קישור.');
+        return;
+      }
+      redirects[key] = url;
+      document.getElementById('json').value = JSON.stringify(redirects, null, 2);
+      document.getElementById('key').value = '';
+      document.getElementById('url').value = '';
+    }
+
+    async function saveToGitHub() {
+      const token = prompt("הדבק את ה-Personal Access Token שלך מ-GitHub:");
+      if (!token) return;
+
+      const content = btoa(unescape(encodeURIComponent(document.getElementById('json').value)));
+      const repo = "ytapil.github.io";
+      const path = "key/data.json";
+      const owner = "YtapIL";
+
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+      const getRes = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const getData = await getRes.json();
+      const sha = getData.sha;
+
+      const result = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+        },
+        body: JSON.stringify({
+          message: "עדכון קובץ data.json מ-YTAP Admin",
+          content,
+          sha
+        })
+      });
+
+      if (result.ok) {
+        document.getElementById('status').textContent = "✅ הקובץ נשמר בהצלחה!";
+      } else {
+        document.getElementById('status').textContent = "❌ שגיאה בשמירה ל-GitHub.";
+      }
+    }
+
+    // טען את הנתונים הקיימים
+    fetch("https://ytapil.github.io/key/data.json?v=" + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        redirects = data;
+        document.getElementById('json').value = JSON.stringify(data, null, 2);
+      });
+  </script>
+</body>
+</html>
