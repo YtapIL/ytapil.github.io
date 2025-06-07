@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Redirecting...</title>
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    const id = new URLSearchParams(window.location.search).get("id");
 
-    const redirects = {
-      gabi: "https://wa.me/972501234567",
-      masharka: "https://bydauto.co.il/service-centers/afula/",
-      promo1: "https://example.com/promo"
-    };
-
-    if (redirects[id]) {
-      window.location.href = redirects[id];
-    } else {
-      document.write("⚠️ מזהה לא מוכר. ודא שכתבת נכון.");
-    }
+    fetch("data.json?v=" + Date.now()) // זה שובר את המטמון (cache)
+      .then(response => response.json())
+      .then(data => {
+        if (data[id]) {
+          window.location.href = data[id];
+        } else {
+          document.body.innerHTML = "⚠️ מזהה לא קיים במערכת.";
+        }
+      })
+      .catch(err => {
+        document.body.innerHTML = "⚠️ שגיאה בטעינת ההפניה: " + err;
+      });
   </script>
 </head>
 <body>
+  <p>🔄 ממתין להפניה...</p>
 </body>
 </html>
