@@ -6,21 +6,24 @@
   <script>
     const id = new URLSearchParams(window.location.search).get("id");
 
-    fetch("data.json?v=" + Date.now()) // זה שובר את המטמון (cache)
-      .then(response => response.json())
+    fetch("data.json?v=" + Date.now())
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
       .then(data => {
         if (data[id]) {
           window.location.href = data[id];
         } else {
-          document.body.innerHTML = "⚠️ מזהה לא קיים במערכת.";
+          document.body.innerHTML = "⚠️ מזהה לא קיים במערכת: " + id;
         }
       })
       .catch(err => {
-        document.body.innerHTML = "⚠️ שגיאה בטעינת ההפניה: " + err;
+        document.body.innerHTML = "⚠️ שגיאה בטעינת הקובץ: " + err;
       });
   </script>
 </head>
 <body>
-  <p>🔄 ממתין להפניה...</p>
+  <p>ממתין להפניה...</p>
 </body>
 </html>
